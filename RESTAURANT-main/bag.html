@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta name="description" content="Free Bootstrap Theme by BootstrapMade.com">
+    <meta name="keywords" content="free website templates, free bootstrap themes, free template, free bootstrap, free website template">
+  
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Satisfy|Bree+Serif|Candal|PT+Sans">
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<title>UcentralFOOD</title>
+
+	<!-- Normalize V8.0.1 -->
+	<link rel="stylesheet" href="./css/normalize.css">
+
+	<!-- MDBootstrap V5 -->
+	<link rel="stylesheet" href="./css/mdb.min.css">
+
+	<!-- Font Awesome V5.15.1 -->
+	<link rel="stylesheet" href="./css/all.css">
+
+	<!-- Sweet Alert V10.13.0 -->
+	<script src="./js/sweetalert2.js" ></script>
+
+	<!-- General Styles -->
+	<link rel="stylesheet" href="./css/style.css">
+
+
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Variables
+            const baseDeDatos = [
+                {
+                    id: 1,
+                    nombre: 'Pollo con salsa de champiñones',
+                    precio: 10000,
+                    imagen: '/assets/platillos/Pollo.jpg'
+                },
+                {
+                    id: 2,
+                    nombre: 'Solomillo caramelizado',
+                    precio: 15000,
+                    imagen: '/assets/platillos/Solomillo.jpg'
+                },
+                {
+                    id: 3,
+                    nombre: 'Tacos de aguacate y langostinos',
+                    precio: 12000,
+                    imagen: '/assets/platillos/Tacos.jpg'
+                },
+                {
+                    id: 4,
+                    nombre: 'Canelones de espinaca',
+                    precio: 10000,
+                    imagen: '/assets/platillos/Canelones.jpg'
+                }
+
+            ];
+
+            let carrito = [];
+            const divisa = '$';
+            const DOMitems = document.querySelector('#items');
+            const DOMcarrito = document.querySelector('#carrito');
+            const DOMtotal = document.querySelector('#total');
+            const DOMbotonVaciar = document.querySelector('#boton-vaciar');
+            const miLocalStorage = window.localStorage;
+
+            // Funciones
+
+            /**
+            * Dibuja todos los productos a partir de la base de datos. No confundir con el carrito
+            */
+            function renderizarProductos() {
+                baseDeDatos.forEach((info) => {
+                    // Estructura
+                    const miNodo = document.createElement('div');
+                    miNodo.classList.add('card', 'col-sm-4');
+                    // Body
+                    const miNodoCardBody = document.createElement('div');
+                    miNodoCardBody.classList.add('card-body');
+                    // Titulo
+                    const miNodoTitle = document.createElement('h5');
+                    miNodoTitle.classList.add('card-title');
+                    miNodoTitle.textContent = info.nombre;
+                    // Imagen
+                    const miNodoImagen = document.createElement('img');
+                    miNodoImagen.classList.add('img-fluid');
+                    miNodoImagen.setAttribute('src', info.imagen);
+                    // Precio
+                    const miNodoPrecio = document.createElement('p');
+                    miNodoPrecio.classList.add('card-text');
+                    miNodoPrecio.textContent = `${info.precio}${divisa}`;
+                    // Boton 
+                    const miNodoBoton = document.createElement('button');
+                    miNodoBoton.classList.add('btn', 'btn-primary');
+                    miNodoBoton.textContent = '+';
+                    miNodoBoton.setAttribute('marcador', info.id);
+                    miNodoBoton.addEventListener('click', anyadirProductoAlCarrito);
+                    // Insertamos
+                    miNodoCardBody.appendChild(miNodoImagen);
+                    miNodoCardBody.appendChild(miNodoTitle);
+                    miNodoCardBody.appendChild(miNodoPrecio);
+                    miNodoCardBody.appendChild(miNodoBoton);
+                    miNodo.appendChild(miNodoCardBody);
+                    DOMitems.appendChild(miNodo);
+                });
+            }
+
+            /**
+            * Evento para añadir un producto al carrito de la compra
+            */
+            function anyadirProductoAlCarrito(evento) {
+                // Anyadimos el Nodo a nuestro carrito
+                carrito.push(evento.target.getAttribute('marcador'))
+                // Actualizamos el carrito 
+                renderizarCarrito();
+                // Actualizamos el LocalStorage
+                guardarCarritoEnLocalStorage();
+            }
+
+            /**
+            * Dibuja todos los productos guardados en el carrito
+            */
+            function renderizarCarrito() {
+                // Vaciamos todo el html
+                DOMcarrito.textContent = '';
+                // Quitamos los duplicados
+                const carritoSinDuplicados = [...new Set(carrito)];
+                // Generamos los Nodos a partir de carrito
+                carritoSinDuplicados.forEach((item) => {
+                    // Obtenemos el item que necesitamos de la variable base de datos
+                    const miItem = baseDeDatos.filter((itemBaseDatos) => {
+                        // ¿Coincide las id? Solo puede existir un caso
+                        return itemBaseDatos.id === parseInt(item);
+                    });
+                    // Cuenta el número de veces que se repite el producto
+                    const numeroUnidadesItem = carrito.reduce((total, itemId) => {
+                        // ¿Coincide las id? Incremento el contador, en caso contrario no mantengo
+                        return itemId === item ? total += 1 : total;
+                    }, 0);
+                    // Creamos el nodo del item del carrito
+                    const miNodo = document.createElement('li');
+                    miNodo.classList.add('list-group-item', 'text-right', 'mx-2');
+                    miNodo.textContent = `${numeroUnidadesItem} x ${miItem[0].nombre} - ${miItem[0].precio}${divisa}`;
+                    // Boton de borrar
+                    const miBoton = document.createElement('button');
+                    miBoton.classList.add('btn', 'btn-danger', 'mx-5');
+                    miBoton.textContent = 'X';
+                    miBoton.style.marginLeft = '1rem';
+                    miBoton.dataset.item = item;
+                    miBoton.addEventListener('click', borrarItemCarrito);
+                    // Mezclamos nodos
+                    miNodo.appendChild(miBoton);
+                    DOMcarrito.appendChild(miNodo);
+                });
+                // Renderizamos el precio total en el HTML
+                DOMtotal.textContent = calcularTotal();
+            }
+
+            /**
+            * Evento para borrar un elemento del carrito
+            */
+            function borrarItemCarrito(evento) {
+                // Obtenemos el producto ID que hay en el boton pulsado
+                const id = evento.target.dataset.item;
+                // Borramos todos los productos
+                carrito = carrito.filter((carritoId) => {
+                    return carritoId !== id;
+                });
+                // volvemos a renderizar
+                renderizarCarrito();
+                // Actualizamos el LocalStorage
+                guardarCarritoEnLocalStorage();
+
+            }
+
+            /**
+             * Calcula el precio total teniendo en cuenta los productos repetidos
+             */
+            function calcularTotal() {
+                // Recorremos el array del carrito 
+                return carrito.reduce((total, item) => {
+                    // De cada elemento obtenemos su precio
+                    const miItem = baseDeDatos.filter((itemBaseDatos) => {
+                        return itemBaseDatos.id === parseInt(item);
+                    });
+                    // Los sumamos al total
+                    return total + miItem[0].precio;
+                }, 0).toFixed(2);
+            }
+
+            /**
+            * Varia el carrito y vuelve a dibujarlo
+            */
+            function vaciarCarrito() {
+                // Limpiamos los productos guardados
+                carrito = [];
+                // Renderizamos los cambios
+                renderizarCarrito();
+                // Borra LocalStorage
+                localStorage.clear();
+
+            }
+
+            function guardarCarritoEnLocalStorage () {
+                miLocalStorage.setItem('carrito', JSON.stringify(carrito));
+            }
+
+            function cargarCarritoDeLocalStorage () {
+                // ¿Existe un carrito previo guardado en LocalStorage?
+                if (miLocalStorage.getItem('carrito') !== null) {
+                    // Carga la información
+                    carrito = JSON.parse(miLocalStorage.getItem('carrito'));
+                }
+            }
+
+            // Eventos
+            DOMbotonVaciar.addEventListener('click', vaciarCarrito);
+
+            // Inicio
+            cargarCarritoDeLocalStorage();
+            renderizarProductos();
+            renderizarCarrito();
+        });
+    </script>
+
+
+</head>
+<body>
+
+	<!-- Header -->
+	<header class="header full-box">
+	    <div class="header-brand text-center full-box">
+	        <a href="index.html">
+	            <img src="./assets/img/logo.png" alt="logo" class="img-fluid">
+	        </a>
+	    </div>
+
+	    <div class="header-options full-box">
+	        <nav class="header-navbar full-box poppins-regular font-weight-bold" >
+	            <ul class="list-unstyled full-box">
+	                <li>
+	                    <a href="index.html" >Inicio<span class="full-box" ></span></a>
+	                </li>
+
+	            </ul>
+	        </nav>
+            <div class="header-button full-box text-center btn-login-menu" >
+	            <i class="fas fa-user-alt" onclick="show_popup_login()" data-mdb-toggle="tooltip" data-mdb-placement="bottom" title="Login" ></i>
+	            <div class="div-bordered popup-login">
+
+	                <!-- Inicio de sesion -->
+	                <span class="text-center poppins-regular font-weight-bold">Inicio de sesión</span>
+	                <form class="full-box" action="">
+	                    <div class="form-outline mb-4">
+	                        <input type="email" class="form-control" name="login_email_cliente" id="login_email" maxlength="70" required="" placeholder="Email" >
+	                    </div>
+	                    <div class="form-outline mb-4">
+	                        <input type="password" class="form-control" name="login_clave_cliente" id="login_password" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required="" placeholder="Contraseña" >
+	                    </div>
+	                    <p class="text-center">
+	                        <button class="btn btn-info btn-sm w-100">Iniciar sesión</button>
+	                    </p>
+	                </form>
+	                <hr>
+	                <p class="text-center full-box">¿No tienes cuenta? <a href="registration.html">Regístrate aquí</a></p>
+
+	                <!-- Cerrar sesion --
+	                <div class="text-center full-box">
+	                    <i class="fas fa-user-circle fa-4x"></i>
+	                </div>
+	                <span class="poppins-regular font-weight-bold">Nombre de usuario</span>
+	                <div class="text-center full-box">
+	                    <a href="#" class="btn btn-info btn-sm w-100"><i class="fas fa-user-cog fa-fw"></i> &nbsp; Mi cuenta</a>
+	                </div>
+	                <div class="text-center full-box">
+	                    <a hre</div>
+	                <form class="full-box" action="">
+	                    <button class="btn btn-raised btn-primary btn-sm w-100" ><i class="fas fa-door-open fa-fw"></i> &nbsp; Cerrar sesión</button>
+	                </form>-->f="#" class="btn btn-info btn-sm w-100"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Dashboard</a>
+	                
+	                
+	            </div>
+	        </div>
+	        <a href="bag.html" class="header-button full-box text-center" data-mdb-toggle="tooltip" data-mdb-placement="bottom" title="Menu y Carrito" >
+	            <i class="fas fa-shopping-bag"></i>
+	            <span class="badge bg-warning rounded-pill bag-count" ></span>
+	        </a>
+	    </div>
+	</header>
+
+
+	<!-- Content -->
+	<section class="container-cart ">
+	     <div class="row">
+            <!-- Elementos generados a partir del JSON -->
+            <main id="items" class="col-sm-7 row"></main>
+            <!-- Carrito -->
+            <aside class="col-sm-5">
+                <h2>Carrito</h2>
+                <!-- Elementos del carrito -->
+                <ul id="carrito" class="list-group"></ul>
+                <hr>
+                <!-- Precio total -->
+                <p class="text-right">Total: <span id="total"></span;</p>
+                <button id="boton-vaciar" class="btn btn-danger">Vaciar</button>
+                <p class="text-center"><a href="registration.html" class="btn btn-primary"><i class="fas fa-hamburger fa-fw"></i> &nbsp; Realizar pedido</a></p>
+            </aside>
+        </div>
+        
+	</section>
+
+    
+
+<!-- Reservas -->
+    <section id="contact" class="section-padding">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <h1 class="header-h">Reserva tu mesa</h1>
+              <p class="header-p">o compra sin registros. </p>
+            </div>
+          </div>
+          <div class="row msg-row">
+            <div class="col-md-4 col-sm-4 mr-15">
+              <div class="media-2">
+                <div class="media-left">
+                  <div class="contact-phone bg-1 text-center"><span class="phone-in-talk fa fa-phone"></span></div>
+                </div>
+                <div class="media-body">
+                  <h4 class="dark-blue regular">Numero telefonico</h4>
+                  <p class="light-blue regular alt-p">+57 3027037273 - <span class="contacts-sp">numero para reservas</span></p>
+                </div>
+              </div>
+              <div class="media-2">
+                <div class="media-left">
+                  <div class="contact-email bg-14 text-center"><span class="hour-icon fa fa-clock-o"></span></div>
+                </div>
+                <div class="media-body">
+                  <h4 class="dark-blue regular">horas de atencion</h4>
+                  <p class="light-blue regular alt-p"> lunes a viernes 09.00 - 24:00</p>
+                  <p class="light-blue regular alt-p">
+                    Sabados y domingos 08:00 - 03.00
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8 col-sm-8">
+              <form action="" method="post" role="form" class="contactForm">
+                <div id="sendmessage">Su solicitud de reserva ha sido enviada. ¡Gracias!</div>
+                <div id="errormessage"></div>
+                <div class="col-md-6 col-sm-6 contact-form pad-form">
+                  <div class="form-group label-floating is-empty">
+                    <input type="text" name="name" class="form-control" id="name" placeholder="Tu nombre" data-rule="minlen:4" data-msg="Por favor ingrese al menos 4 caracteres" />
+                    <div class="validation"></div>
+                  </div>
+    
+                </div>
+                <div class="col-md-6 col-sm-6 contact-form">
+                  <div class="form-group">
+                    <input type="date" class="form-control label-floating is-empty" name="date" id="date" placeholder="Dia" data-rule="required" data-msg="Este campo es obligatorio" />
+                    <div class="validation"></div>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 contact-form pad-form">
+                  <div class="form-group">
+                    <input type="email" class="form-control label-floating is-empty" name="email" id="email" placeholder="Tu email" data-rule="email" data-msg="Por favor use un emal valido" />
+                    <div class="validation"></div>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 contact-form">
+                  <div class="form-group">
+                    <input type="time" class="form-control label-floating is-empty" name="time" id="time" placeholder="hora" data-rule="required" data-msg="Este campo es obligatorio" />
+                    <div class="validation"></div>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 contact-form">
+                  <div class="form-group">
+                    <input type="text" class="form-control label-floating is-empty" name="phone" id="phone" placeholder="telefono" data-rule="required" data-msg="Este campo es obligatorio" />
+                    <div class="validation"></div>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 contact-form">
+                  <div class="form-group">
+                    <input type="text" class="form-control label-floating is-empty" name="people" id="people" placeholder="Nombre del reservante" data-rule="required" data-msg="Este campo es obligatorio" />
+                    <div class="validation"></div>
+                  </div>
+                </div>
+                <div class="col-md-12 contact-form">
+                  <div class="form-group label-floating is-empty">
+                    <textarea class="form-control" name="message" rows="5" rows="3" data-rule="required" data-msg="Por favor escribe algo para nosotros" placeholder="Mensaje"></textarea>
+                    <div class="validation"></div>
+                  </div>
+    
+                </div>
+                <div class="col-md-12 btnpad">
+                  <div class="contacts-btn-pad">
+                    <p class="text-center"><a  class="btn btn-primary"><i class="fas fa-soup"></i> &nbsp; Reserva</a></p>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+	<!-- Leyenda -->
+	<footer class="footer">
+	    <div class="container">
+	        <div class="row">
+	            <div class="col-12 col-md-4">
+	                <ul class="list-unstyled" >
+	                    <li><h5 class="font-weight-bold" ><i class="far fa-copyright"></i> Comunicaciones analogas y digitales</h5></li>
+	                    <li> Todos los derechos reservados </li>
+	                </ul>
+	            </div>
+	            <div class="col-12 col-md-4">
+	                <ul class="list-unstyled" >
+	                    <li><h5 class="font-weight-bold" >Bogota</h5></li>
+	                    <li><i class="fas fa-map-marker-alt fa-fw"></i> bogota, cundinamarca, ucentral</li>
+	                </ul>
+	            </div>
+	            <div class="col-12 col-md-4">
+	                <ul class="list-unstyled" >
+	                    <li><h5 class="font-weight-bold" >Siguenos en:</h5> </li>
+	                    <li>
+	                        <a href="https://es-la.facebook.com" class="footer-link" target="_blank" >
+	                            <i class="fab fa-facebook fa-fw"></i> Facebook
+	                        </a>
+	                    </li>
+
+	                    <li>
+	                        <a href="https://www.youtube.com" class="footer-link" target="_blank" >
+	                            <i class="fab fa-youtube fa-fw"></i>
+	                                Youtube
+	                        </a>
+	                    </li>
+	                </ul>
+	            </div>
+	        </div>
+	    </div>
+	</footer>
+	
+	
+	<!-- MDBootstrap V5 -->
+	<script src="./js/mdb.min.js" ></script>
+
+	<!-- General scripts -->
+	<script src="./js/main.js" ></script>
+</body>
+</html>
